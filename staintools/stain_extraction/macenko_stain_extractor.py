@@ -1,6 +1,7 @@
 import numpy as np
 
 from staintools.stain_extraction.abc_stain_extractor import ABCStainExtractor
+from staintools.utils.exceptions import TissueMaskException
 from staintools.utils.miscellaneous_functions import normalize_matrix_rows
 from staintools.utils.optical_density_conversion import convert_RGB_to_OD
 from staintools.tissue_masks.luminosity_threshold_tissue_locator import LuminosityThresholdTissueLocator
@@ -25,6 +26,9 @@ class MacenkoStainExtractor(ABCStainExtractor):
         tissue_mask = LuminosityThresholdTissueLocator.get_tissue_mask(I, luminosity_threshold=luminosity_threshold).reshape((-1,))
         OD = convert_RGB_to_OD(I).reshape((-1, 3))
         OD = OD[tissue_mask]
+
+        if tissue_mask.sum() <= 1:
+            raise TissueMaskException("Tissue mask is too small or none")
 
         # Eigenvectors of cov in OD space (orthogonal as cov symmetric)
         _, V = np.linalg.eigh(np.cov(OD, rowvar=False))

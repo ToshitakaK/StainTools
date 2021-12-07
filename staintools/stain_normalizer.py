@@ -8,13 +8,14 @@ from staintools.utils.get_concentrations import get_concentrations
 
 class StainNormalizer(object):
 
-    def __init__(self, method):
+    def __init__(self, method, is_parallel=True):
         if method.lower() == 'macenko':
             self.extractor = MacenkoStainExtractor
         elif method.lower() == 'vahadane':
             self.extractor = VahadaneStainExtractor
         else:
             raise Exception('Method not recognized.')
+        self.is_parallel = is_parallel
 
     def fit(self, target):
         """
@@ -24,7 +25,7 @@ class StainNormalizer(object):
         :return:
         """
         self.stain_matrix_target = self.extractor.get_stain_matrix(target)
-        self.target_concentrations = get_concentrations(target, self.stain_matrix_target)
+        self.target_concentrations = get_concentrations(target, self.stain_matrix_target, is_parallel=self.is_parallel)
         self.maxC_target = np.percentile(self.target_concentrations, 99, axis=0).reshape((1, 2))
         self.stain_matrix_target_RGB = convert_OD_to_RGB(self.stain_matrix_target)  # useful to visualize.
 
@@ -36,7 +37,7 @@ class StainNormalizer(object):
         :return:
         """
         stain_matrix_source = self.extractor.get_stain_matrix(I)
-        source_concentrations = get_concentrations(I, stain_matrix_source)
+        source_concentrations = get_concentrations(I, stain_matrix_source, is_parallel=self.is_parallel)
         maxC_source = np.percentile(source_concentrations, 99, axis=0).reshape((1, 2))
         source_concentrations *= (self.maxC_target / maxC_source)
         tmp = 255 * np.exp(-1 * np.dot(source_concentrations, self.stain_matrix_target))

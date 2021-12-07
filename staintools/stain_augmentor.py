@@ -9,7 +9,7 @@ from staintools.utils.get_concentrations import get_concentrations
 
 class StainAugmentor(object):
 
-    def __init__(self, method, sigma1=0.2, sigma2=0.2, augment_background=True):
+    def __init__(self, method, sigma1=0.2, sigma2=0.2, augment_background=True, is_parallel=True):
         if method.lower() == 'macenko':
             self.extractor = MacenkoStainExtractor
         elif method.lower() == 'vahadane':
@@ -19,6 +19,7 @@ class StainAugmentor(object):
         self.sigma1 = sigma1
         self.sigma2 = sigma2
         self.augment_background = augment_background
+        self.is_parallel = is_parallel
 
     def fit(self, I):
         """
@@ -29,7 +30,7 @@ class StainAugmentor(object):
         """
         self.image_shape = I.shape
         self.stain_matrix = self.extractor.get_stain_matrix(I)
-        self.source_concentrations = get_concentrations(I, self.stain_matrix)
+        self.source_concentrations = get_concentrations(I, self.stain_matrix, is_parallel=self.is_parallel)
         self.n_stains = self.source_concentrations.shape[1]
         self.tissue_mask = LuminosityThresholdTissueLocator.get_tissue_mask(I).ravel()
 
